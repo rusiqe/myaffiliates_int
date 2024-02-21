@@ -1,0 +1,34 @@
+function concatenateValuesAndCreateSheet() {
+  // Define the source and target sheets
+  var sourceSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('SEOActivity');
+  var targetSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Tokens');
+
+  // Get the values from column A in the source sheet
+  var sourceValues = sourceSheet.getRange('A1901:A2070').getValues().flat();
+
+  // Get the values from column B in the target sheet
+  var targetValues = targetSheet.getRange('H997:H1330').getValues().flat();
+
+  // Create a new array to store the concatenated values
+  var resultArray = [];
+
+  // Iterate through each value in column A of the source sheet
+  for (var i = 0; i < sourceValues.length; ++i) {
+    // Iterate through each value in column B of the target sheet
+    for (var j = 0; j < targetValues.length; j++) {
+      // Concatenate values and push to the result array
+      var concatenatedValue = targetValues[j] + '/' + sourceValues[i];
+
+      resultArray.push([concatenatedValue]);
+
+      // Log the concatenated value for debugging
+      Logger.log(concatenatedValue);
+    }
+  }
+
+  // Create a new sheet called "ResultSheet"
+  var resultSheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet('ResultSheet - SEOActivity9');
+
+  // Resize the result sheet to match the size of the result array
+  resultSheet.getRange(1, 1, resultArray.length, 1).setValues(resultArray);
+}
