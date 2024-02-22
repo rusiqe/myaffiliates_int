@@ -1,0 +1,41 @@
+function addLinksToSheets() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var tokensSheet = ss.getSheetByName("Tokens");
+  var otherSheets = ss.getSheets().filter(sheet => sheet.getName() !== "Tokens");
+
+  var tokensRange = tokensSheet.getRange("H:H");
+  var tokenValues = tokensRange.getValues().flat(); // Flatten the 2D array into a 1D array
+  var linksRangeE = tokensSheet.getRange("E:E");
+  var linksRangeF = tokensSheet.getRange("F:F");
+  var linksValuesE = linksRangeE.getValues().flat(); // Flatten the 2D array into a 1D array
+  var linksValuesF = linksRangeF.getValues().flat(); // Flatten the 2D array into a 1D array
+
+  Logger.log("Token values: " + tokenValues);
+  Logger.log("Links values (E): " + linksValuesE);
+  Logger.log("Links values (F): " + linksValuesF);
+
+  otherSheets.forEach(function(sheet) {
+    Logger.log("Processing sheet: " + sheet.getName());
+    var dataRange = sheet.getRange("A:A");
+    var data = dataRange.getValues();
+
+    for (var i = data.length - 1; i >= 0; i--) { // Start from the bottom and move upwards
+      Logger.log("Row: " + (i + 1));
+      var tokenPid = data[i][0]; // Get the full TOKEN/PID value
+      var token = tokenPid.split("/")[0]; // Extract token from TOKEN/PID
+      Logger.log("Token extracted: " + token);
+      var tokenIndex = tokenValues.indexOf(token);
+      Logger.log("Token index: " + tokenIndex);
+      if (tokenIndex !== -1) {
+        var chosenLink = Math.random() < 0.5 ? linksValuesE[tokenIndex] : linksValuesF[tokenIndex];
+        Logger.log("Chosen link: " + chosenLink);
+        if (chosenLink) {
+          var linkToAdd = chosenLink + "/" + tokenPid; // Append TOKEN/PID to chosen link
+          Logger.log("New link: " + linkToAdd);
+          sheet.getRange("A" + (i + 1)).setValue(linkToAdd);
+          Logger.log("Updated value in column A: " + sheet.getRange("A" + (i + 1)).getValue());
+        }
+      }
+    }
+  });
+}
