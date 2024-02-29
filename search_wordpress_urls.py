@@ -13,8 +13,9 @@ def extract_db_config(wp_config_path):
                 db_config[match.group(1).lower()] = match.group(2)
     return db_config
 
-# Function to search for URLs within WordPress content and metadata
+# Search for specific URLs within the post content and meta fields of WordPress sites.
 def search_for_urls_in_wordpress(sites_directory, url_pattern):
+    links_found = False  # Flag to track if any links are found
     for site in os.listdir(sites_directory):
         site_path = os.path.join(sites_directory, site)
         if os.path.isdir(site_path):
@@ -33,6 +34,7 @@ def search_for_urls_in_wordpress(sites_directory, url_pattern):
                             if re.search(url_pattern, post_content):
                                 print(f"Found URL in post content for site: {site}")
                                 print(f"Post ID: {post_id}")
+                                links_found = True
 
                         # Search for URLs in post meta values
                         cursor.execute("SELECT post_id, meta_key, meta_value FROM wp_postmeta WHERE meta_value REGEXP %s", (url_pattern,))
@@ -41,12 +43,16 @@ def search_for_urls_in_wordpress(sites_directory, url_pattern):
                             if re.search(url_pattern, meta_value):
                                 print(f"Found URL in post meta for site: {site}")
                                 print(f"Post ID: {post_id}, Meta Key: {meta_key}")
+                                links_found = True
 
                         cursor.close()
                         connection.close()
                     except pymysql.Error as e:
                         print(f"Error searching for URLs for site: {site}")
                         print(f"Error details: {e}")
+
+    if not links_found:
+        print("No links matching the specified pattern were found in any WordPress site.")
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:
