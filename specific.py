@@ -17,7 +17,7 @@ def extract_db_config(wp_config_path):
     else:
         return None
 
-# Search for a specific URL within the post content and meta fields of WordPress sites.
+# Search for the target URL in the post content and post meta of WordPress sites.
 def search_for_url_in_wordpress(sites_directory, target_url):
     for site in os.listdir(sites_directory):
         site_path = os.path.join(sites_directory, site)
@@ -27,21 +27,28 @@ def search_for_url_in_wordpress(sites_directory, target_url):
                 db_config = extract_db_config(wp_config_path)
                 if db_config:
                     db_host, db_user, db_password, db_name = db_config
+                    print(f"Connecting to database {db_name} at {db_host} with user {db_user}")
                     try:
                         connection = pymysql.connect(host=db_host, user=db_user, password=db_password, db=db_name)
                         cursor = connection.cursor()
 
                         # Search for the target URL in post content
-                        cursor.execute("SELECT ID, post_content FROM wp_posts WHERE post_content LIKE %s", ('%' + target_url + '%',))
+                        query = "SELECT ID, post_content FROM wp_posts WHERE post_content LIKE %s"
+                        print(f"Executing query: {query}")
+                        cursor.execute(query, ('%' + target_url + '%',))
                         posts = cursor.fetchall()
+                        print(f"Query returned {len(posts)} results")
                         for post_id, post_content in posts:
                             if target_url in post_content:
                                 print(f"Found URL {target_url} in post content for site: {site}")
                                 print(f"Post ID: {post_id}")
 
                         # Search for the target URL in post meta values
-                        cursor.execute("SELECT post_id, meta_key, meta_value FROM wp_postmeta WHERE meta_value LIKE %s", ('%' + target_url + '%',))
+                        query = "SELECT post_id, meta_key, meta_value FROM wp_postmeta WHERE meta_value LIKE %s"
+                        print(f"Executing query: {query}")
+                        cursor.execute(query, ('%' + target_url + '%',))
                         metas = cursor.fetchall()
+                        print(f"Query returned {len(metas)} results")
                         for post_id, meta_key, meta_value in metas:
                             if target_url in meta_value:
                                 print(f"Found URL {target_url} in post meta for site: {site}")
@@ -54,6 +61,7 @@ def search_for_url_in_wordpress(sites_directory, target_url):
                         print(f"Error details: {e}")
 
 if __name__ == '__main__':
+    # ... same as before ...if __name__ == '__main__':
     if len(sys.argv) < 3:
         print("Usage: python search_wordpress_urls.py <sites_directory> <target_url>")
         sys.exit(1)
