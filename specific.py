@@ -32,27 +32,32 @@ def search_for_url_in_wordpress(sites_directory, target_url):
                         connection = pymysql.connect(host=db_host, user=db_user, password=db_password, db=db_name)
                         cursor = connection.cursor()
 
-                        # Search for the target URL in post content
-                        query = "SELECT ID, post_content FROM wp_posts WHERE post_content LIKE %s"
-                        print(f"Executing query: {query}")
-                        cursor.execute(query, ('%' + target_url + '%',))
-                        posts = cursor.fetchall()
-                        print(f"Query returned {len(posts)} results")
-                        for post_id, post_content in posts:
-                            if target_url in post_content:
-                                print(f"Found URL {target_url} in post content for site: {site}")
-                                print(f"Post ID: {post_id}")
+                        # Get all tables in the database
+                        cursor.execute("SHOW TABLES")
+                        tables = cursor.fetchall()
 
-                        # Search for the target URL in post meta values
-                        query = "SELECT post_id, meta_key, meta_value FROM wp_postmeta WHERE meta_value LIKE %s"
-                        print(f"Executing query: {query}")
-                        cursor.execute(query, ('%' + target_url + '%',))
-                        metas = cursor.fetchall()
-                        print(f"Query returned {len(metas)} results")
-                        for post_id, meta_key, meta_value in metas:
-                            if target_url in meta_value:
-                                print(f"Found URL {target_url} in post meta for site: {site}")
-                                print(f"Post ID: {post_id}, Meta Key: {meta_key}")
+                        for table in tables:
+                            table = table[0]
+                            print(f"Searching table {table}")
+
+                            # Get all text-based columns in the table
+                            cursor.execute(f"SHOW COLUMNS FROM {table} WHERE Type LIKE '%%text%%' OR Type LIKE '%%varchar%%'")
+                            columns = cursor.fetchall()
+
+                            for column in columns:
+                                column = column[0]
+                                print(f"Searching column {column}")
+
+                                # Search for the target URL in the column
+                                query = f"SELECT {column} FROM {table} WHERE {column} LIKE %s"
+                                print(f"Executing query: {query}")
+                                cursor.execute(query, ('%' + target_url + '%',))
+                                results = cursor.fetchall()
+                                print(f"Query returned {len(results)} results")
+
+                                for result in results:
+                                    if target_url in result[0]:
+                                        print(f"Found URL {target_url} in table {table}, column {column} for site: {site}")
 
                         cursor.close()
                         connection.close()
